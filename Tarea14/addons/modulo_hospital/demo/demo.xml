@@ -1,0 +1,31 @@
+<odoo>
+    <data>
+      <!-- Datos Demo para Médicos -->
+      <record model="hospital.doctor" id="doctor_1">
+          <field name="name">Juan</field>
+          <field name="last_name">Pérez</field>
+          <field name="medical_license">ID123</field>
+      </record>
+
+      <record model="hospital.doctor" id="doctor_2">
+          <field name="name">María</field>
+          <field name="last_name">Gómez</field>
+          <field name="medical_license">DanielCastelao312</field>
+      </record>
+
+      <!-- Datos Demo para Pacientes -->
+      <record model="hospital.patient" id="patient_1">
+          <field name="name">Carlos</field>
+          <field name="last_name">López</field>
+          <field name="symptoms">Fiebre y asi y dolor de cabeza</field>
+      </record>
+
+      <!-- Datos Demo para Diagnósticos -->
+      <record model="hospital.diagnosis" id="diagnosis_1">
+          <field name="doctor_id" ref="doctor_1"/>
+          <field name="patient_id" ref="patient_1"/>
+          <field name="date">2023-10-01</field>
+          <field name="diagnosis">Gripe supongo</field>
+      </record>
+    </data>
+</odoo>
