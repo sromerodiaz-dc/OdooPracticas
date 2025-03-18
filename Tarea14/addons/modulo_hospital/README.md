@@ -1,44 +1,35 @@
-# tarea 15
-Para realizar la tarea el enunciado dice que los modelos han de ser los siguientes:
-Paciente: hospital.patient
-Médico: hospital.doctor
-Diagnóstico: hospital.diagnosis
+# Tarea 15: Módulo Hospital en Odoo
 
-Según lo que dice el enunciado las relaciones:
+En este `readme` detallo el desarrollo del módulo **Hospital** en Odoo, que maneja pacientes, médicos y diagnósticos.
 
-Un médico puede tener múltiples diagnósticos (One2many).
-Un paciente puede tener múltiples diagnósticos (One2many).
-Cada diagnóstico vincula un médico y un paciente (Many2one).
+## **Modelos y Relaciones**
 
-Las vistas han de ser tree,form y kanban para los 3 modelos.
+### **Entidades del Módulo**
+- **Paciente:** `hospital.patient`
+- **Médico:** `hospital.doctor`
+- **Diagnóstico:** `hospital.diagnosis`
 
-Y hay que meter datos de demo.
+### **Relaciones entre Modelos**
+- Un **médico** puede tener múltiples diagnósticos (*One2many*).
+- Un **paciente** puede tener múltiples diagnósticos (*One2many*).
+- Cada **diagnóstico** vincula un médico y un paciente (***Many2one***).
 
-## Desarrollo
+## **Manifiesto del Módulo**
 
-### `Manifiesto`
-El manifest es... y es importante por...
-```t
+El **manifest** (`__manifest__.py`) informa a Odoo sobre la configuración del módulo:
+
+```python
 # -*- coding: utf-8 -*-
 {
     'name': "hospital",
-
     'summary': "Manejo Hospital",
-
     'description': """
-Manejo de pacientes, doctores y sus respectivos diagnosticos
+Manejo de pacientes, doctores y sus respectivos diagnósticos.
     """,
-
     'author': "Santiago Romero",
     'website': "danielcastelao.org",
-
-    # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/15.0/odoo/addons/base/data/ir_module_category_data.xml
-    # for the full list
     'category': 'Uncategorized',
     'version': '0.1',
-
-    # any module necessary for this one to work correctly
     'depends': ['base'],
     'data': [
         'security/ir.model.access.csv',
@@ -47,20 +38,19 @@ Manejo de pacientes, doctores y sus respectivos diagnosticos
     'demo': [
         'demo/demo.xml',
     ],
-
     'installable': True,
     'application': True,
 }
 ```
-Se indica a Odoo de donde cargar los datos que se piden como los datos de demostración y las diferentes views.
 
-### `Modelos`
-Los modelos tienen que ser tres y se encapsulan en los archivos diagnos.py, doctor.py y patient.py
+## **Definición de Modelos**
 
+Cada modelo se define en su respectivo archivo:
+
+### **Modelo `hospital.diagnosis`**
 ```python
 from odoo import models, fields
 
-# Modelo del diagnostico dado del doctor al paciente
 class Diagnosis(models.Model):
     _name = 'hospital.diagnosis'
     _description = 'Diagnóstico'
@@ -68,47 +58,28 @@ class Diagnosis(models.Model):
 
     diagnosis = fields.Text(string='Diagnóstico', required=True)
     date = fields.Date(string='Fecha', default=fields.Date.today, required=True)
-
-    # Cada registro de diagnostico se asocia con un unico doctor o paciente
-    doctor_id = fields.Many2one(
-        'hospital.doctor',
-        string='Médico',
-        required=True
-    )
-
-    # Los pacientes tambien ya que pueden tener diferentes diagnosticos a lo largo del tiempo
-    patient_id = fields.Many2one(
-        'hospital.patient',
-        string='Paciente',
-        required=True
-    )
+    doctor_id = fields.Many2one('hospital.doctor', string='Médico', required=True)
+    patient_id = fields.Many2one('hospital.patient', string='Paciente', required=True)
 ```
 
-Luego los archivos de paciente y doctor son más cortos:
+### **Modelo `hospital.doctor`**
 ```python
-from odoo import models, fields 
+from odoo import models, fields
 
-# "Por cada médico un modelo con nombre, apellidos y número de colegiado"
 class Doctor(models.Model):
     _name = 'hospital.doctor'
     _description = 'Médico'
 
     name = fields.Char(string='Nombre', required=True)
     last_name = fields.Char(string='Apellidos', required=True)
-    medical_license = fields.Char(string='Identificador único de cada doctor', required=True)
-
-    # Cada doctor puede dar más de un diagnóstico, por eso One2many
-    diagnosis_ids = fields.One2many(
-        'hospital.diagnosis',
-        'doctor_id',
-        string='Diagnósticos'
-    )
+    medical_license = fields.Char(string='Número de Colegiado', required=True)
+    diagnosis_ids = fields.One2many('hospital.diagnosis', 'doctor_id', string='Diagnósticos')
 ```
 
+### **Modelo `hospital.patient`**
 ```python
 from odoo import models, fields
 
-# "Por cada paciente un modelo con nombre, apellidos y sus respectivos síntomas"
 class Patient(models.Model):
     _name = 'hospital.patient'
     _description = 'Paciente'
@@ -116,29 +87,26 @@ class Patient(models.Model):
     name = fields.Char(string='Nombre', required=True)
     last_name = fields.Char(string='Apellidos', required=True)
     symptoms = fields.Text(string='Síntomas')
-
-    # Un paciente puede tener múltiples diagnósticos por eso One2many
-    diagnosis_ids = fields.One2many(
-        'hospital.diagnosis',  # Modelo relacionado
-        'patient_id',          # Campo inverso en diagnosis
-        string='Historial de diagnósticos'
-    )
+    diagnosis_ids = fields.One2many('hospital.diagnosis', 'patient_id', string='Historial de diagnósticos')
 ```
 
-### `Archivo CSV: ACLs`
-// explicacion de por que es importante hacer el archivo y como funciona el formato del mismo
-```
+## **Archivo CSV: ACLs (Permisos de Acceso)**
+
+El archivo `ir.model.access.csv` define los permisos para cada modelo:
+
+```csv
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hospital_diagnosis,access_hospital_diagnosis,model_hospital_diagnosis,base.group_user,1,1,1,1
 access_hospital_doctor,access_hospital_doctor,model_hospital_doctor,base.group_user,1,1,1,1
 access_hospital_patient,access_hospital_patient,model_hospital_patient,base.group_user,1,1,1,1
 ```
 
-### `Vistas: FORM, TREE y KANBAN`
-// Explicar el formato de las vistas, como se ve cada una y tambien explicar los actions y los menus. Para estos ultimos tambien explicar la sintaxis.
+## **Vistas: FORM y TREE**
 
-Ejemplo empleado en el ejercicio de FORM:
-```
+Odoo utiliza XML para definir las vistas. A continuación, se presentan ejemplos de cada tipo.
+
+### **Vista FORM para Pacientes**
+```xml
 <record model="ir.ui.view" id="view_patient_form">
     <field name="name">hospital.patient.form</field>
     <field name="model">hospital.patient</field>
@@ -167,8 +135,8 @@ Ejemplo empleado en el ejercicio de FORM:
 </record>
 ```
 
-Ejemplo de TREE:
-```
+### **Vista TREE para Pacientes**
+```xml
 <record model="ir.ui.view" id="view_patient_tree">
     <field name="name">hospital.patient.tree</field>
     <field name="model">hospital.patient</field>
@@ -182,66 +150,24 @@ Ejemplo de TREE:
 </record>
 ```
 
-Ejemplo de KANBAN:
-```
-<record model="ir.ui.view" id="view_patient_kanban">
-    <field name="name">hospital.patient.kanban</field>
-    <field name="model">hospital.patient</field>
-    <field name="arch" type="xml">
-        <kanban>
-            <field name="name"/>
-            <field name="symptoms"/>
-            <templates>
-                <t t-name="kanban-box">
-                    <div class="oe_kanban_global_click">
-                        <div class="o_kanban_record_title">
-                            <strong><field name="name"/></strong>
-                            <br/>
-                            <span><field name="last_name"/></span>
-                        </div>
-                        <div class="o_kanban_record_body">
-                            <span><field name="symptoms"/></span>
-                        </div>
-                    </div>
-                </t>
-            </templates>
-        </kanban>
-    </field>
-</record>
-```
+## **Menús y Acciones**
 
-Ejemplo de los menus usados:
-```
-<!-- Menús -->
-<menuitem 
-    id="menu_hospital_root" 
-    name="Hospital" 
-    sequence="10"
-    groups="base.group_user"
-/>
-
+### **Menús**
+```xml
+<menuitem id="menu_hospital_root" name="Hospital" sequence="10" groups="base.group_user"/>
 <menuitem id="menu_hospital_patients" name="Pacientes" parent="menu_hospital_root" action="action_patients"/>
 <menuitem id="menu_hospital_doctors" name="Médicos" parent="menu_hospital_root" action="action_doctors"/>
 <menuitem id="menu_hospital_diagnoses" name="Diagnósticos" parent="menu_hospital_root" action="action_diagnoses"/>
 ```
 
-Ejemplo de los "actions" empleados por los menus:
-```
+### **Acciones**
+```xml
 <record model="ir.actions.act_window" id="action_patients">
     <field name="name">Pacientes</field>
     <field name="res_model">hospital.patient</field>
     <field name="view_mode">tree,form,kanban</field>
 </record>
-
-<record model="ir.actions.act_window" id="action_doctors">
-    <field name="name">Médicos</field>
-    <field name="res_model">hospital.doctor</field>
-    <field name="view_mode">tree,form</field>
-</record>
-
-<record model="ir.actions.act_window" id="action_diagnoses">
-    <field name="name">Diagnósticos</field>
-    <field name="res_model">hospital.diagnosis</field>
-    <field name="view_mode">tree,form</field>
-</record>
 ```
+
+---
+
